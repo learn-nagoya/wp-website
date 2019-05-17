@@ -13,3 +13,12 @@ function my_theme_enqueue_styles() {
     );
 }
 
+
+// increase max per page sincer there are ~200 countries
+add_filter( "rest_country_query", function ($args, $request) {
+	if (! isset($_GET['per_page'])) {
+		// new default to overwrite the default 10
+		$args['posts_per_page'] = 220; 
+	}
+	return $args;
+}, 15, 2);

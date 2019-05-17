@@ -11,6 +11,3 @@ app/sql
 *Thumbs.db
 *.sass-cache*
 *~imageoptim*
-
-wp-content/themes
-

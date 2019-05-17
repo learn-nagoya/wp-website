@@ -12,6 +12,5 @@ app/sql
 *.sass-cache*
 *~imageoptim*
 
-wp-content/plugins
 wp-content/themes
 

@@ -11,3 +11,4 @@ app/sql
 *Thumbs.db
 *.sass-cache*
 *~imageoptim*
+.htaccess

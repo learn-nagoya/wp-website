@@ -104,7 +104,7 @@ var nagoyaMap = (function () {
   // ==================
 
   function addStatusToGeoJson() {
-    return fetch('http://nagoya.local/wp-json/wp/v2/country/')
+    return fetch(`${document.location.origin}/wp-json/wp/v2/country/`)
     .then((response) => {
       return response.json()
     })

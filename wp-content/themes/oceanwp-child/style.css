@@ -106,3 +106,18 @@ Use Cases
 	text-align: left;
 }
 
+/**********
+News
+**********/
+.news-summary {
+	clear: both;
+	margin-bottom: 3rem;
+}
+
+.news-summary  h3 {
+	margin: 0;
+}
+.news-summary img {
+	float: left;
+	margin: 0 15px 15px 0;
+}

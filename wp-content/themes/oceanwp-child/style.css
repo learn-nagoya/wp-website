@@ -100,12 +100,17 @@ Use Cases
 }
 
 /**********
-Use Cases
+questions
 **********/
 .community-question-summary h2 {
 	text-align: left;
+	margin-bottom: 0;
 }
 
+
+.community-question-summary {
+	margin-bottom: 3rem;
+}
 /**********
 News
 **********/

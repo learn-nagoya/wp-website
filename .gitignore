@@ -5,6 +5,7 @@ wp-config.php
 *.sql
 /logs
 app/sql
+local-adminer*
 
 # Hidden files
 *.DS_Store
@@ -12,3 +13,9 @@ app/sql
 *.sass-cache*
 *~imageoptim*
 .htaccess
+
+# SiteGround
+/staging
+php_errorlog
+.ftpquota
+.well-known/*

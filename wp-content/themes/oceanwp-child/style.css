@@ -11,6 +11,18 @@ h1, h2 {
 	text-align: center;
 }
 
+/* https://wordpress.stackexchange.com/a/299004  */
+.comment.comment-author-admin .comment-link:after, 
+.comment.comment-author-editor .comment-link:after{
+    content: "Staff";
+    margin-left: 0.25em;
+    color: #aaa;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    padding: 0 0.5em;
+}
+
+
 /**********
 Home page
 **********/
@@ -125,4 +137,27 @@ News
 .news-summary img {
 	float: left;
 	margin: 0 15px 15px 0;
+}
+
+/**********
+guides
+**********/
+.guide-container {
+  width: 100%;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+}
+
+
+.guide-summary {
+	border: 1px solid #ccc;
+	margin: 10px;
+    padding: 10px 5px;
+    flex: 0 0 calc(33% - 20px);
+    text-align: center;
+}
+
+.guide-summary img { 
+	margin-bottom: 10px;
 }

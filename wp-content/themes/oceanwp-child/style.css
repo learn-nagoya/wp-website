@@ -216,8 +216,16 @@ guides
 	border: 1px solid #ccc;
 	margin: 10px;
     padding: 10px 5px;
-    flex: 0 0 calc(33% - 20px);
     text-align: center;
+	flex: 0 0 calc(100%);
+
+}
+
+@media screen and (min-width: 768px) {
+	.guide-summary {
+		flex: 0 0 calc(33% - 20px);
+	}
+
 }
 
 .guide-summary img { 

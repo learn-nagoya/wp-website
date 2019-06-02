@@ -11,6 +11,10 @@ h1, h2 {
 	text-align: center;
 }
 
+h1 {
+	margin: 0 0 1em;	
+}
+
 /* https://wordpress.stackexchange.com/a/299004  */
 .comment.comment-author-admin .comment-link:after, 
 .comment.comment-author-editor .comment-link:after{
@@ -22,25 +26,66 @@ h1, h2 {
     padding: 0 0.5em;
 }
 
+.elementor-widget-heading .elementor-heading-title {
+	line-height: 1.1 !important;
+}
+
+.single .single-post-title.entry-title {
+	font-size: 2em;
+	padding: 0;
+	margin: 0 0 1em;
+	border: 0;
+	letter-spacing: inherit;
+}
+
+#content-wrap .content-area {
+	border: 0;
+}
+
+.um input[type=submit].um-button, .um input[type=submit].um-button:focus {
+    background: #1A936F !important;
+}
+
+@media screen and (min-width: 768px) {
+	.caldera_forms_form {
+		width: 80%;
+		margin: 0 auto;
+	}	
+}
+
 
 /**********
 Home page
 **********/
 
 #home-carousel-hero {
-	top: 200px;
-    z-index: 2;
+	z-index: 2;
 	background: rgba(255,255,255,.8);
-	color: #000;
-	margin-left: 12rem;
+	color: #777;
 	padding: 2rem;
-	width: 40%;
-	position: absolute;
 }
+
+@media screen and (min-width: 960px) {
+	#home-carousel-hero {
+		top: 200px;
+		margin-left: 12rem;
+		width: 40%;
+		position: absolute;
+    }
+}
+
 
 /**********
 Countries
 **********/
+
+.country-index #map {
+	height: 350px;
+	padding: 0;
+	margin: 0;
+  width: 100%;
+	border: 1px solid #333;
+}
 
 .country-index .letter-menu {
 	text-align: center;
@@ -69,6 +114,7 @@ Countries
 	background: #fff;
     padding: 1rem;
 }
+
 /**********
 Use Cases
 **********/
@@ -78,33 +124,36 @@ Use Cases
 }
 
 .usecase-summary img {
-	float: left;
-	margin-right: 2rem;
+	margin: 0 15px 15px 0;
 }
+
+@media screen and (min-width: 768px) {
+	.usecase-summary img {
+		float: left;
+	}
+}
+
+/**********
+Use Cases and country
+**********/
 
 .usecase-detail #map, .country-detail #map {
 	height: 350px;
 	padding: 0;
-	margin: 0;
+	margin: 0 0 2rem 0;
+	border: 1px solid #333;
 	position: relative;
-    float: left;
-    width: 50%;
-    margin-right: 2rem;
-	border: 1px solid #333;
+
 }
 
-.country-index #map {
-	height: 350px;
-	padding: 0;
-	margin: 0;
-  width: 100%;
-	border: 1px solid #333;
+@media screen and (min-width: 768px) {
+	.usecase-detail #map, .country-detail #map {
+    	float: left;
+   		width: 50%;
+		margin: 0 2rem 0 0;
+	}
 }
 
-.usecase-detail h2:first-of-type, .country-detail h2:first-of-type {
-	margin-top: 3rem;
-	clear: both;
-}
 
 .usecase-detail .intro, .country-detail .intro {
 	overflow: hidden;
@@ -114,7 +163,7 @@ Use Cases
 /**********
 questions
 **********/
-.community-question-summary h2 {
+.community-question-summary h3 {
 	text-align: left;
 	margin-bottom: 0;
 }
@@ -123,20 +172,29 @@ questions
 .community-question-summary {
 	margin-bottom: 3rem;
 }
+
+
 /**********
 News
 **********/
 .news-summary {
 	clear: both;
-	margin-bottom: 3rem;
+    padding: .75em 0;
 }
 
 .news-summary  h3 {
 	margin: 0;
 }
+
 .news-summary img {
-	float: left;
 	margin: 0 15px 15px 0;
+	border: 1px solid #eee !important;
+}
+
+@media screen and (min-width: 768px) {
+	.news-summary img {
+		float: left;
+	}
 }
 
 /**********

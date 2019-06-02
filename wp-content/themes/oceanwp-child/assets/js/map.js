@@ -1,5 +1,6 @@
 var nagoyaMap = (function () {
   var targetCountryCode;
+  var highlightColor = '#fff4b0';
 
   const borderLayerSettings = {
     opacity: 1,
@@ -31,11 +32,11 @@ var nagoyaMap = (function () {
 
     if (e.target.feature.geometry.type === 'LineString') {
       highlightLayer.setStyle({
-        color: '#ffff00',
+        color: highlightColor,
       });
     } else {
       highlightLayer.setStyle({
-        fillColor: '#ffff00',
+        fillColor: highlightColor,
         fillOpacity: 1
       });
     }
@@ -166,8 +167,8 @@ var nagoyaMap = (function () {
       var div = L.DomUtil.create('div', 'map-legend');
       div.innerHTML += `
       green: party<br>
-      purple: party, not ratified<br>
-      red: nonparty
+      light green: party, not ratified<br>
+      blue: nonparty
       `
 
        return div;
@@ -180,11 +181,11 @@ var nagoyaMap = (function () {
   function getCountryStatusColor(country) {
     let color;
     if (country.status === 'party') {
-      color = 'green'
+      color = '#1A936F'
     } else if (country.status === 'party, not ratified') {
-      color = 'purple'
+      color = '#88D498'
     } else {
-      color = 'red'
+      color = '#38AECC'
     }
 
     return color

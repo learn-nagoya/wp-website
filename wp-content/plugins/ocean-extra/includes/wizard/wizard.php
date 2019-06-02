@@ -753,13 +753,9 @@ if (!class_exists('Ocean_Extra_Theme_Wizard')):
             ?>
 
             <div class="owp-ready-wrap owp-wrap">
-                <h2><?php esc_attr_e("Congratulations", 'ocean-extra'); ?></h2>
-                <h1><?php esc_attr_e("Your website is ready!", 'ocean-extra'); ?></h1>
-                <p><?php
-            echo
-            sprintf(__('To thank you using OceanWP, every month, 5 users will have the chance to win a free license for the unlimited plan of the Core Extensions Bundle. To participate, simply click the button in the form below. An email will be sent to you at the end of the month if you win!', 'ocean-extra'), '<strong>', '</strong>'
-            );
-            ?></p>
+                <h2><?php esc_attr_e("Your website is ready", 'ocean-extra'); ?></h2>
+                <h1 style="font-size: 30px;"><?php esc_attr_e("Get the extension bundle for free!", 'ocean-extra'); ?></h1>
+                <p style="font-size: 14px;"><?php esc_attr_e("Win the Core Extension Bundle by entering our giveaway. Every month we randomly draw 5 people that get the full suite of pro extensions for free. Enter with your email below.", 'ocean-extra'); ?></p>
                 <div class="owp-newsletter">
                     <p><?php esc_attr_e("Input your email below to get the chance to win.", 'ocean-extra'); ?></p>
 
@@ -777,22 +773,22 @@ if (!class_exists('Ocean_Extra_Theme_Wizard')):
                                 <label for="consent-agency"><input type="checkbox" name="owp_use" id="consent-agency" value="agency"><?php esc_html_e('Agency', 'ocean-extra'); ?></label>
                                 <label for="consent-blog"><input type="checkbox" name="owp_use" id="consent-blog" value="blog"><?php esc_html_e('Blog', 'ocean-extra'); ?></label>
                                 <label for="consent-other"><input type="checkbox" name="owp_use" id="consent-other" value="other"><?php esc_html_e('Other', 'ocean-extra'); ?></label>
-
-                                <div class="klaviyo_helptext klaviyo_gdpr_text">
-                                    <?php echo
-                                    sprintf(
-                                        esc_html__( 'By entering your email, you agree to our %1$sTerms of Services%2$s and %3$sPrivacy Policy%4$s.', 'ocean-extra' ),
-                                        '<a href="https://oceanwp.org/terms-and-conditions/" target="_blank">',
-                                        '</a>',
-                                        '<a href="https://oceanwp.org/privacy-policy/" target="_blank">',
-                                        '</a>'
-                                    ); ?>
-                                </div>
                             </div>
                         </div>
 
                         <div class="klaviyo_form_actions">
                             <button type="submit" class="klaviyo_submit_button"><?php esc_html_e('Enter Now', 'ocean-extra'); ?></button>
+
+                            <div class="klaviyo_helptext klaviyo_gdpr_text">
+                                <?php echo
+                                sprintf(
+                                    esc_html__( 'By entering your email, you agree to our %1$sTerms of Services%2$s and %3$sPrivacy Policy%4$s.', 'ocean-extra' ),
+                                    '<a href="https://oceanwp.org/terms-and-conditions/" target="_blank">',
+                                    '</a>',
+                                    '<a href="https://oceanwp.org/privacy-policy/" target="_blank">',
+                                    '</a>'
+                                ); ?>
+                            </div>
                         </div>
 
                         <div class="klaviyo_messages">
@@ -826,6 +822,25 @@ if (!class_exists('Ocean_Extra_Theme_Wizard')):
             <?php
         }
 
+        /**
+         * Define cronjob
+         */
+        public static function cronjob_activation() {
+            date_default_timezone_set(get_option('timezone_string'));
+            $new_time_format = time() + (24 * 60 * 60 );      
+            if (!wp_next_scheduled('add_second_notice')) {
+                wp_schedule_event($new_time_format, 'daily', 'add_second_notice');
+            }
+        }
+
+        /**
+         * Delete cronjob
+         */
+        public static function cronjob_deactivation() {
+            wp_clear_scheduled_hook('add_second_notice');
+           
+        }
+
     }
 
     new Ocean_Extra_Theme_Wizard();
@@ -833,4 +848,7 @@ if (!class_exists('Ocean_Extra_Theme_Wizard')):
     register_activation_hook(OE_FILE_PATH, "Ocean_Extra_Theme_Wizard::install");
     // when deactivate plugin
     register_deactivation_hook(OE_FILE_PATH, "Ocean_Extra_Theme_Wizard::uninstall");
+    //when activate plugin for automatic second notice
+    register_activation_hook(OE_FILE_PATH, array("Ocean_Extra_Theme_Wizard", "cronjob_activation"));
+    register_deactivation_hook(OE_FILE_PATH, array("Ocean_Extra_Theme_Wizard", "cronjob_deactivation"));
 endif;

@@ -53,6 +53,10 @@ h1 {
 	}	
 }
 
+.search-entry-title.entry-title {
+	text-align: left;
+}
+
 
 /**********
 Home page

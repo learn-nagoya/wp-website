@@ -219,3 +219,55 @@ guides
 .guide-summary img { 
 	margin-bottom: 10px;
 }
+
+
+/**********
+tags
+**********/
+.tag article {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ccc;
+}
+
+.tag .search-entry-inner {
+  display: flex;
+  align-items: center;
+
+}
+
+.tag .thumbnail {
+  min-width: 120px;
+  margin-right: 20px;
+}
+
+.tag .thumbnail img {
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.tag .search-entry-title {
+  font-size: 24px;
+  margin: 0 0 6px;
+}
+
+.tag .search-entry-summary p:last-child {
+  margin-bottom: 0;
+}
+
+.tag .search-entry-readmore a {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  padding-bottom: 3px;
+  border-bottom: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.tag ul {
+  list-style: none;
+}

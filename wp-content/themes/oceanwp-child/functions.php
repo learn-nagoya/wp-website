@@ -13,8 +13,10 @@ function my_theme_enqueue_styles() {
     );
 }
 
+/**********
+increase max countries per page since there are ~200 countries
+**********/
 
-// increase max per page sincer there are ~200 countries
 add_filter( "rest_country_query", function ($args, $request) {
 	if (! isset($_GET['per_page'])) {
 		// new default to overwrite the default 10
@@ -22,3 +24,19 @@ add_filter( "rest_country_query", function ($args, $request) {
 	}
 	return $args;
 }, 15, 2);
+
+/**********
+show custom post types for a given tag
+**********/
+
+function my_post_queries( $query ) {
+  if (!is_admin() && $query->is_main_query()){
+    // alter the query for the archive and category pages 
+    if( is_category() || is_archive() ){
+            $query->set('post_type', array('community_question', 'post', 'use_case') );
+            $query->set('post_status', 'publish');
+            $query->set('orderby', 'date');
+    }
+  }
+}
+add_action( 'pre_get_posts', 'my_post_queries' );

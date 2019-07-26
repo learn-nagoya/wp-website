@@ -13,6 +13,7 @@
   .sg-layout {
     display: block;
     height: auto;
+    overflow: visible;
 
     &:after {
       content: '';

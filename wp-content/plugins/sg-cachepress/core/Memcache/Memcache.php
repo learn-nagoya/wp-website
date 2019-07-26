@@ -175,6 +175,13 @@ class Memcache {
 		$port_file_content = $this->get_port_file_contents();
 
 		if ( ! $port_file_content ) {
+			$response = shell_exec( 'test -f /etc/yum.repos.d/baseos.repo && echo Avalon' );
+
+			// The post for our new server is aloways the same.
+			if ( 'Avalon' === trim( $response ) ) {
+				return 11211;
+			}
+
 			return '';
 		}
 

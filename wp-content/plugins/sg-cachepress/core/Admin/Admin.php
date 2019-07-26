@@ -35,6 +35,7 @@ class Admin {
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_styles' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_print_styles', array( $this, 'admin_print_styles' ) );
 		add_action( 'plugins_loaded', array( $this, 'hide_errors_and_notices' ) );
 
 		if ( ! $this->is_multisite_without_permissions() ) {
@@ -258,9 +259,19 @@ class Admin {
 			'manage_options',
 			\SiteGround_Optimizer\PLUGIN_SLUG,   // Page slug.
 			array( $this, 'render' ),
-			\SiteGround_Optimizer\URL . '/assets/images/logo-white.svg'
+			\SiteGround_Optimizer\URL . '/assets/images/icon.svg'
 		);
 	}
+
+	/**
+	 * Add styles to WordPress admin head.
+	 *
+	 * @since  5.2.0
+	 */
+	public function admin_print_styles() {
+		echo '<style>.toplevel_page_sg-cachepress.menu-top .wp-menu-image img { width:20px;} </style>';
+	}
+
 
 	/**
 	 * Display the admin page.

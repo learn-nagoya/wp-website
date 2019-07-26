@@ -10,6 +10,7 @@ use SiteGround_Optimizer\Install_Service\Install_5_0_9;
 use SiteGround_Optimizer\Install_Service\Install_5_0_10;
 use SiteGround_Optimizer\Install_Service\Install_5_0_12;
 use SiteGround_Optimizer\Install_Service\Install_5_0_13;
+use SiteGround_Optimizer\Install_Service\Install_5_2_0;
 use SiteGround_Optimizer\Supercacher\Supercacher;
 
 /**
@@ -57,6 +58,7 @@ class Install_Service {
 			new Install_5_0_10(),
 			new Install_5_0_12(),
 			new Install_5_0_13(),
+			new Install_5_2_0(),
 		);
 
 		$version = null;

@@ -1,4 +1,6 @@
-<div class="um <?php echo $this->get_class( $mode ); ?> um-<?php echo esc_attr( $form_id ); ?>">
+<?php if ( ! defined( 'ABSPATH' ) ) exit; ?>
+
+<div class="um <?php echo esc_attr( $this->get_class( $mode ) ); ?> um-<?php echo esc_attr( $form_id ); ?>">
 	<div class="um-form">
 		<form method="post" action="">
 			<?php if ( isset( $_GET['updated'] ) && 'checkemail' == $_GET['updated'] ) { ?>

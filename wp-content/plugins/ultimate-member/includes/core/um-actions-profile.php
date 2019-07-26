@@ -216,7 +216,7 @@ function um_user_edit_profile( $args ) {
 	do_action( 'um_user_before_updating_profile', $userinfo );
 
 	if ( ! empty( $args['custom_fields'] ) ) {
-		$fields = unserialize( $args['custom_fields'] );
+		$fields = apply_filters( 'um_user_edit_profile_fields', unserialize( $args['custom_fields'] ), $args );
 	}
 
 	// loop through fields
@@ -246,18 +246,42 @@ function um_user_edit_profile( $args ) {
 				}
 			}
 
+
+			/**
+			 * Returns dropdown/multi-select options keys from a callback function
+			 * @since 2019-05-30
+			 */
+			$has_custom_source = apply_filters( "um_has_dropdown_options_source__{$key}", false );
+			if ( isset( $array['options'] ) && in_array( $array['type'], array( 'select', 'multiselect' ) ) ) {
+
+				$options = array();
+				if ( ! empty( $array['custom_dropdown_options_source'] ) && function_exists( $array['custom_dropdown_options_source'] ) && ! $has_custom_source  ) {
+					$callback_result = call_user_func( $array['custom_dropdown_options_source'], $array['options'] );
+					if ( is_array( $callback_result ) ) {
+						$options = array_keys( $callback_result );
+					}
+				}
+
+				$array['options'] = apply_filters( "um_custom_dropdown_options__{$key}", $options );
+
+			}
+
+
 			//validation of correct values from options in wp-admin
-			$stripslashes = stripslashes( $args['submitted'][ $key ] );
+			$stripslashes = $args['submitted'][ $key ];
+			if ( is_string( $stripslashes ) ) {
+				$stripslashes = stripslashes( $stripslashes );
+			}
 			if ( in_array( $array['type'], array( 'select' ) ) &&
-			     ! empty( $array['options'] ) && ! empty( $stripslashes ) &&
-			     ! in_array( $stripslashes, array_map( 'trim', $array['options'] ) ) ) {
+				 ! empty( $array['options'] ) && ! empty( $stripslashes ) &&
+				 ! in_array( $stripslashes, array_map( 'trim', $array['options'] ) ) && ! $has_custom_source  ) {
 				continue;
 			}
 
 			//validation of correct values from options in wp-admin
 			//the user cannot set invalid value in the hidden input at the page
 			if ( in_array( $array['type'], array( 'multiselect', 'checkbox', 'radio' ) ) &&
-			     ! empty( $args['submitted'][ $key ] ) && ! empty( $array['options'] ) ) {
+				 ! empty( $args['submitted'][ $key ] ) && ! empty( $array['options'] ) ) {
 				$args['submitted'][ $key ] = array_map( 'stripslashes', array_map( 'trim', $args['submitted'][ $key ] ) );
 				$args['submitted'][ $key ] = array_intersect( $args['submitted'][ $key ], array_map( 'trim', $array['options'] ) );
 			}
@@ -295,6 +319,7 @@ function um_user_edit_profile( $args ) {
 			}
 		}
 	}
+
 
 	if ( isset( $args['submitted']['description'] ) ) {
 		$to_update['description'] = $args['submitted']['description'];
@@ -528,7 +553,7 @@ function um_profile_dynamic_meta_desc() {
 		$user_id = um_user( 'ID' );
 
 		$url = um_user_profile_url();
-        $avatar = um_get_user_avatar_url( $user_id, 'original' );
+		$avatar = um_get_user_avatar_url( $user_id, 'original' );
 
 		um_reset_user(); ?>
 
@@ -568,7 +593,7 @@ function um_profile_header_cover_area( $args ) {
 		?>
 
 		<div class="um-cover <?php if ( um_user( 'cover_photo' ) || ( $default_cover && $default_cover['url'] ) ) echo 'has-cover'; ?>"
-		     data-user_id="<?php echo um_profile_id(); ?>" data-ratio="<?php echo $args['cover_ratio']; ?>">
+			 data-user_id="<?php echo um_profile_id(); ?>" data-ratio="<?php echo $args['cover_ratio']; ?>">
 
 			<?php
 			/**
@@ -696,21 +721,27 @@ add_action( 'um_after_profile_header_name_args', 'um_social_links_icons', 50 );
 function um_profile_header( $args ) {
 	$classes = null;
 
-	if (!$args['cover_enabled']) {
+	if ( ! $args['cover_enabled'] ) {
 		$classes .= ' no-cover';
 	}
 
 	$default_size = str_replace( 'px', '', $args['photosize'] );
 
-	$overlay = '<span class="um-profile-photo-overlay">
+	// Switch on/off the profile photo uploader
+	$disable_photo_uploader = empty( $args['use_custom_settings'] ) ? UM()->options()->get( 'disable_profile_photo_upload' ) : $args['disable_photo_upload'];
+
+	if ( ! empty( $disable_photo_uploader ) ) {
+		$args['disable_photo_upload'] = 1;
+		$overlay = '';
+	} else {
+		$overlay = '<span class="um-profile-photo-overlay">
 			<span class="um-profile-photo-overlay-s">
 				<ins>
 					<i class="um-faicon-camera"></i>
 				</ins>
 			</span>
 		</span>';
-
-	?>
+	} ?>
 
 	<div class="um-header<?php echo $classes; ?>">
 
@@ -741,9 +772,7 @@ function um_profile_header( $args ) {
 			<a href="<?php echo um_user_profile_url(); ?>" class="um-profile-photo-img"
 			   title="<?php echo um_user( 'display_name' ); ?>"><?php echo $overlay . get_avatar( um_user( 'ID' ), $default_size ); ?></a>
 
-			<?php
-
-			if ( ! isset( UM()->user()->cannot_edit ) ) {
+			<?php if ( empty( $disable_photo_uploader ) && empty( UM()->user()->cannot_edit ) ) {
 
 				UM()->fields()->add_hidden_field( 'profile_photo' );
 
@@ -814,35 +843,33 @@ function um_profile_header( $args ) {
 
 				}
 
-			}
-
-			?>
+			} ?>
 
 		</div>
 
 		<div class="um-profile-meta">
 
-            <?php
-            /**
-             * UM hook
-             *
-             * @type action
-             * @title um_before_profile_main_meta
-             * @description Insert before profile main meta block
-             * @input_vars
-             * [{"var":"$args","type":"array","desc":"Form Arguments"}]
-             * @change_log
-             * ["Since: 2.0.1"]
-             * @usage add_action( 'um_before_profile_main_meta', 'function_name', 10, 1 );
-             * @example
-             * <?php
-             * add_action( 'um_before_profile_main_meta', 'my_before_profile_main_meta', 10, 1 );
-             * function my_before_profile_main_meta( $args ) {
-             *     // your code here
-             * }
-             * ?>
-             */
-            do_action( 'um_before_profile_main_meta', $args ); ?>
+			<?php
+			/**
+			 * UM hook
+			 *
+			 * @type action
+			 * @title um_before_profile_main_meta
+			 * @description Insert before profile main meta block
+			 * @input_vars
+			 * [{"var":"$args","type":"array","desc":"Form Arguments"}]
+			 * @change_log
+			 * ["Since: 2.0.1"]
+			 * @usage add_action( 'um_before_profile_main_meta', 'function_name', 10, 1 );
+			 * @example
+			 * <?php
+			 * add_action( 'um_before_profile_main_meta', 'my_before_profile_main_meta', 10, 1 );
+			 * function my_before_profile_main_meta( $args ) {
+			 *     // your code here
+			 * }
+			 * ?>
+			 */
+			do_action( 'um_before_profile_main_meta', $args ); ?>
 
 			<div class="um-main-meta">
 
@@ -946,10 +973,10 @@ function um_profile_header( $args ) {
 
 				<div class="um-meta-text">
 					<textarea id="um-meta-bio"
-					          data-character-limit="<?php echo UM()->options()->get( 'profile_bio_maxchars' ); ?>"
-					          placeholder="<?php _e( 'Tell us a bit about yourself...', 'ultimate-member' ); ?>"
-					          name="<?php echo 'description-' . $args['form_id']; ?>"
-					          id="<?php echo 'description-' . $args['form_id']; ?>"><?php echo UM()->fields()->field_value( 'description' ) ?></textarea>
+							  data-character-limit="<?php echo UM()->options()->get( 'profile_bio_maxchars' ); ?>"
+							  placeholder="<?php _e( 'Tell us a bit about yourself...', 'ultimate-member' ); ?>"
+							  name="<?php echo 'description-' . $args['form_id']; ?>"
+							  id="<?php echo 'description-' . $args['form_id']; ?>"><?php echo UM()->fields()->field_value( 'description' ) ?></textarea>
 					<span class="um-meta-bio-character um-right"><span
 							class="um-bio-limit"><?php echo UM()->options()->get( 'profile_bio_maxchars' ); ?></span></span>
 					<?php
@@ -1293,160 +1320,158 @@ function um_profile_menu( $args ) {
 	// get active tabs
 	$tabs = UM()->profile()->tabs_active();
 
-	/**
-	 * UM hook
-	 *
-	 * @type filter
-	 * @title um_user_profile_tabs
-	 * @description Extend profile tabs
-	 * @input_vars
-	 * [{"var":"$tabs","type":"array","desc":"Profile Tabs"}]
-	 * @change_log
-	 * ["Since: 2.0"]
-	 * @usage
-	 * <?php add_filter( 'um_user_profile_tabs', 'function_name', 10, 1 ); ?>
-	 * @example
-	 * <?php
-	 * add_filter( 'um_user_profile_tabs', 'my_user_profile_tabs', 10, 1 );
-	 * function my_user_profile_tabs( $tabs ) {
-	 *     // your code here
-	 *     return $tabs;
-	 * }
-	 * ?>
-	 */
-	$tabs = apply_filters( 'um_user_profile_tabs', $tabs );
+	$all_tabs = $tabs;
 
-	UM()->user()->tabs = $tabs;
-
-	// need enough tabs to continue
-	if ( count( $tabs ) <= 1 ) {
-		return;
-	}
+	$tabs = array_filter( $tabs, function( $item ) {
+		if ( ! empty( $item['hidden'] ) ) {
+			return false;
+		}
+		return true;
+	});
 
 	$active_tab = UM()->profile()->active_tab();
-
-	if ( ! isset( $tabs[ $active_tab ] ) ) {
+	//check here tabs with hidden also, to make correct check of active tab
+	if ( ! isset( $all_tabs[ $active_tab ] ) ) {
 		$active_tab = 'main';
 		UM()->profile()->active_tab = $active_tab;
 		UM()->profile()->active_subnav = null;
 	}
 
-	// Move default tab priority
-	$default_tab = UM()->options()->get( 'profile_menu_default_tab' );
-	$dtab = ( isset( $tabs[ $default_tab ] ) ) ? $tabs[ $default_tab ] : 'main';
-	if ( isset( $tabs[ $default_tab] ) ) {
-		unset( $tabs[ $default_tab ] );
-		$dtabs[ $default_tab ] = $dtab;
-		$tabs = $dtabs + $tabs;
-	} ?>
-
-	<div class="um-profile-nav">
-
-		<?php foreach ( $tabs as $id => $tab ) {
-
-			if ( isset( $tab['hidden'] ) ) {
-				continue;
+	$has_subnav = false;
+	if ( count( $tabs ) == 1 ) {
+		foreach ( $tabs as $tab ) {
+			if ( isset( $tab['subnav'] ) ) {
+				$has_subnav = true;
 			}
+		}
+	}
 
-			$nav_link = UM()->permalinks()->get_current_url( get_option( 'permalink_structure' ) );
-			$nav_link = remove_query_arg( 'um_action', $nav_link );
-			$nav_link = remove_query_arg( 'subnav', $nav_link );
-			$nav_link = add_query_arg( 'profiletab', $id, $nav_link );
+	// need enough tabs to continue
+	if ( count( $tabs ) <= 1 && ! $has_subnav && count( $all_tabs ) === count( $tabs ) ) {
+		return;
+	}
 
-			/**
-			 * UM hook
-			 *
-			 * @type filter
-			 * @title um_profile_menu_link_{$id}
-			 * @description Change profile menu link by tab $id
-			 * @input_vars
-			 * [{"var":"$nav_link","type":"string","desc":"Profile Tab Link"}]
-			 * @change_log
-			 * ["Since: 2.0"]
-			 * @usage
-			 * <?php add_filter( 'um_profile_menu_link_{$id}', 'function_name', 10, 1 ); ?>
-			 * @example
-			 * <?php
-			 * add_filter( 'um_profile_menu_link_{$id}', 'my_profile_menu_link', 10, 1 );
-			 * function my_profile_menu_link( $nav_link ) {
-			 *     // your code here
-			 *     return $nav_link;
-			 * }
-			 * ?>
-			 */
-			$nav_link = apply_filters( "um_profile_menu_link_{$id}", $nav_link );
+	if ( count( $tabs ) > 1 || count( $all_tabs ) > count( $tabs ) ) {
+		// Move default tab priority
+		$default_tab = UM()->options()->get( 'profile_menu_default_tab' );
+		$dtab = ( isset( $tabs[ $default_tab ] ) ) ? $tabs[ $default_tab ] : 'main';
+		if ( isset( $tabs[ $default_tab ] ) ) {
+			unset( $tabs[ $default_tab ] );
+			$dtabs[ $default_tab ] = $dtab;
+			$tabs = $dtabs + $tabs;
+		}
 
-			$profile_nav_class = '';
-			if ( ! UM()->options()->get( 'profile_menu_icons' ) ) {
-				$profile_nav_class .= ' without-icon';
-			}
+		if ( ! empty( $tabs ) ) { ?>
 
-			if ( $id == $active_tab ) {
-				$profile_nav_class .= ' active';
-			} ?>
+			<div class="um-profile-nav">
 
-			<div class="um-profile-nav-item um-profile-nav-<?php echo $id . ' ' . $profile_nav_class; ?>">
-				<?php if ( UM()->options()->get( 'profile_menu_icons' ) ) { ?>
-					<a href="<?php echo $nav_link; ?>" class="uimob800-show uimob500-show uimob340-show um-tip-n"
-					   title="<?php echo esc_attr( $tab['name'] ); ?>" original-title="<?php echo esc_attr( $tab['name'] ); ?>">
+				<?php foreach ( $tabs as $id => $tab ) {
 
-						<i class="<?php echo $tab['icon']; ?>"></i>
+					$nav_link = UM()->permalinks()->get_current_url( get_option( 'permalink_structure' ) );
+					$nav_link = remove_query_arg( 'um_action', $nav_link );
+					$nav_link = remove_query_arg( 'subnav', $nav_link );
+					$nav_link = add_query_arg( 'profiletab', $id, $nav_link );
 
-						<?php if ( isset( $tab['notifier'] ) && $tab['notifier'] > 0 ) { ?>
-							<span class="um-tab-notifier uimob800-show uimob500-show uimob340-show"><?php echo $tab['notifier']; ?></span>
+					/**
+					 * UM hook
+					 *
+					 * @type filter
+					 * @title um_profile_menu_link_{$id}
+					 * @description Change profile menu link by tab $id
+					 * @input_vars
+					 * [{"var":"$nav_link","type":"string","desc":"Profile Tab Link"}]
+					 * @change_log
+					 * ["Since: 2.0"]
+					 * @usage
+					 * <?php add_filter( 'um_profile_menu_link_{$id}', 'function_name', 10, 1 ); ?>
+					 * @example
+					 * <?php
+					 * add_filter( 'um_profile_menu_link_{$id}', 'my_profile_menu_link', 10, 1 );
+					 * function my_profile_menu_link( $nav_link ) {
+					 *     // your code here
+					 *     return $nav_link;
+					 * }
+					 * ?>
+					 */
+					$nav_link = apply_filters( "um_profile_menu_link_{$id}", $nav_link );
+
+					$profile_nav_class = '';
+					if ( ! UM()->options()->get( 'profile_menu_icons' ) ) {
+						$profile_nav_class .= ' without-icon';
+					}
+
+					if ( $id == $active_tab ) {
+						$profile_nav_class .= ' active';
+					} ?>
+
+					<div class="um-profile-nav-item um-profile-nav-<?php echo $id . ' ' . $profile_nav_class; ?>">
+						<?php if ( UM()->options()->get( 'profile_menu_icons' ) ) { ?>
+							<a href="<?php echo $nav_link; ?>" class="uimob800-show uimob500-show uimob340-show um-tip-n"
+							   title="<?php echo esc_attr( $tab['name'] ); ?>" original-title="<?php echo esc_attr( $tab['name'] ); ?>">
+
+								<i class="<?php echo $tab['icon']; ?>"></i>
+
+								<?php if ( isset( $tab['notifier'] ) && $tab['notifier'] > 0 ) { ?>
+									<span class="um-tab-notifier uimob800-show uimob500-show uimob340-show"><?php echo $tab['notifier']; ?></span>
+								<?php } ?>
+
+								<span class="uimob800-hide uimob500-hide uimob340-hide title"><?php echo $tab['name']; ?></span>
+							</a>
+							<a href="<?php echo $nav_link; ?>" class="uimob800-hide uimob500-hide uimob340-hide"
+							   title="<?php echo esc_attr( $tab['name'] ); ?>">
+
+								<i class="<?php echo $tab['icon']; ?>"></i>
+
+								<?php if ( isset( $tab['notifier'] ) && $tab['notifier'] > 0 ) { ?>
+									<span class="um-tab-notifier"><?php echo $tab['notifier']; ?></span>
+								<?php } ?>
+
+								<span class="title"><?php echo $tab['name']; ?></span>
+							</a>
+						<?php } else { ?>
+							<a href="<?php echo $nav_link; ?>" class="uimob800-show uimob500-show uimob340-show um-tip-n"
+							   title="<?php echo esc_attr( $tab['name'] ); ?>" original-title="<?php echo esc_attr( $tab['name'] ); ?>">
+
+								<i class="<?php echo $tab['icon']; ?>"></i>
+
+								<?php if ( isset( $tab['notifier'] ) && $tab['notifier'] > 0 ) { ?>
+									<span class="um-tab-notifier uimob800-show uimob500-show uimob340-show"><?php echo $tab['notifier']; ?></span>
+								<?php } ?>
+							</a>
+							<a href="<?php echo $nav_link; ?>" class="uimob800-hide uimob500-hide uimob340-hide"
+							   title="<?php echo esc_attr( $tab['name'] ); ?>">
+
+								<?php if ( isset( $tab['notifier'] ) && $tab['notifier'] > 0) { ?>
+									<span class="um-tab-notifier"><?php echo $tab['notifier']; ?></span>
+								<?php } ?>
+
+								<span class="title"><?php echo $tab['name']; ?></span>
+							</a>
 						<?php } ?>
+					</div>
 
-						<span class="uimob800-hide uimob500-hide uimob340-hide title"><?php echo $tab['name']; ?></span>
-					</a>
-					<a href="<?php echo $nav_link; ?>" class="uimob800-hide uimob500-hide uimob340-hide"
-					   title="<?php echo esc_attr( $tab['name'] ); ?>">
-
-						<i class="<?php echo $tab['icon']; ?>"></i>
-
-						<?php if ( isset( $tab['notifier'] ) && $tab['notifier'] > 0 ) { ?>
-							<span class="um-tab-notifier"><?php echo $tab['notifier']; ?></span>
-						<?php } ?>
-
-						<span class="title"><?php echo $tab['name']; ?></span>
-					</a>
-				<?php } else { ?>
-					<a href="<?php echo $nav_link; ?>" class="uimob800-show uimob500-show uimob340-show um-tip-n"
-					   title="<?php echo esc_attr( $tab['name'] ); ?>" original-title="<?php echo esc_attr( $tab['name'] ); ?>">
-
-						<i class="<?php echo $tab['icon']; ?>"></i>
-
-						<?php if ( isset( $tab['notifier'] ) && $tab['notifier'] > 0 ) { ?>
-							<span class="um-tab-notifier uimob800-show uimob500-show uimob340-show"><?php echo $tab['notifier']; ?></span>
-						<?php } ?>
-					</a>
-					<a href="<?php echo $nav_link; ?>" class="uimob800-hide uimob500-hide uimob340-hide"
-					   title="<?php echo esc_attr( $tab['name'] ); ?>">
-
-						<?php if ( isset( $tab['notifier'] ) && $tab['notifier'] > 0) { ?>
-							<span class="um-tab-notifier"><?php echo $tab['notifier']; ?></span>
-						<?php } ?>
-
-						<span class="title"><?php echo $tab['name']; ?></span>
-					</a>
 				<?php } ?>
+
+				<div class="um-clear"></div>
+
 			</div>
 
-		<?php } ?>
+		<?php }
+	}
 
-		<div class="um-clear"></div>
-
-	</div>
-
-	<?php foreach ( $tabs as $id => $tab ) {
+	foreach ( $tabs as $id => $tab ) {
 
 		if ( isset( $tab['subnav'] ) && $active_tab == $id ) {
 
 			$active_subnav = ( UM()->profile()->active_subnav() ) ? UM()->profile()->active_subnav() : $tab['subnav_default']; ?>
 
 			<div class="um-profile-subnav">
-				<?php foreach ( $tab['subnav'] as $id_s => $subtab ) { ?>
+				<?php foreach ( $tab['subnav'] as $id_s => $subtab ) {
 
-					<a href="<?php echo add_query_arg( 'subnav', $id_s ); ?>" class="<?php if ( $active_subnav == $id_s ) echo 'active'; ?>">
+					$subnav_link = add_query_arg( 'subnav', $id_s );
+					$subnav_link = apply_filters( 'um_user_profile_subnav_link', $subnav_link, $id_s, $subtab ); ?>
+
+					<a href="<?php echo $subnav_link; ?>" class="<?php if ( $active_subnav == $id_s ) echo 'active'; ?>">
 						<?php echo $subtab; ?>
 					</a>
 

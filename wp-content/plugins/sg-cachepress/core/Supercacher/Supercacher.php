@@ -177,9 +177,8 @@ class Supercacher {
 			return;
 		}
 
-		$hostname            = parse_url( home_url(), PHP_URL_HOST );
-		$ip                  = isset( $_SERVER['SERVER_ADDR'] ) ? $_SERVER['SERVER_ADDR'] : $hostname;
-		$cache_server_socket = @fsockopen( $ip, 80, $errno, $errstr, 2 );
+		$hostname            = str_replace( 'www.', '', parse_url( home_url(), PHP_URL_HOST ) );
+		$cache_server_socket = @fsockopen( $hostname, 80, $errno, $errstr, 2 );
 
 		if ( ! $cache_server_socket ) {
 			return false;

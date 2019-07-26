@@ -20,7 +20,7 @@ use SiteGround_Optimizer\Htaccess\Htaccess;
  */
 class Cli_Status {
 	/**
-	 * Enable specific optimization for SG Optimizer plugin.
+	 * Return the current status of specific optimization
 	 *
 	 * ## OPTIONS
 	 *

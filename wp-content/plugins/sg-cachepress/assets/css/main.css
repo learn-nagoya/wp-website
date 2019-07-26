@@ -55,7 +55,7 @@
   semantic-color-light-hovered: #fff;
   semantic-color-light-active: #fff;
   semantic-color-dark: #f8f8f8;
-  semantic-color-dark-hovered: #f2f2f2;
+  semantic-color-dark-hovered: #ececec;
   semantic-color-dark-active: #f8f8f8;
   semantic-color-error: #f54545;
   semantic-color-success: #6acb4c;
@@ -128,7 +128,7 @@
   semantic-color-light-hovered: #fff;
   semantic-color-light-active: #fff;
   semantic-color-dark: #f8f8f8;
-  semantic-color-dark-hovered: #f2f2f2;
+  semantic-color-dark-hovered: #ececec;
   semantic-color-dark-active: #f8f8f8;
   semantic-color-error: #f54545;
   semantic-color-success: #6acb4c;
@@ -321,7 +321,7 @@ a {
   semantic-color-light-hovered: #fff;
   semantic-color-light-active: #fff;
   semantic-color-dark: #f8f8f8;
-  semantic-color-dark-hovered: #f2f2f2;
+  semantic-color-dark-hovered: #ececec;
   semantic-color-dark-active: #f8f8f8;
   semantic-color-error: #f54545;
   semantic-color-success: #6acb4c;
@@ -545,7 +545,7 @@ a {
   semantic-color-light-hovered: #fff;
   semantic-color-light-active: #fff;
   semantic-color-dark: #f8f8f8;
-  semantic-color-dark-hovered: #f2f2f2;
+  semantic-color-dark-hovered: #ececec;
   semantic-color-dark-active: #f8f8f8;
   semantic-color-error: #f54545;
   semantic-color-success: #6acb4c;
@@ -638,15 +638,8 @@ a {
   padding-top: 0; }
 
 .sg-section__content {
-  margin: 0 auto; }
-
-/* Sizes
-   ========================================================================== */
-.sg-section--content-size-default .sg-section__content {
+  margin: 0 auto;
   max-width: 1240px; }
-
-.sg-section--content-size-expanded .sg-section__content {
-  max-width: calc(100% - 260px); }
 
 /* Density
    ========================================================================== */
@@ -690,9 +683,7 @@ a {
   .sg-drawer-overlay {
     top: 60px; }
   .sg-header + .sg-page {
-    height: calc(100vh - 60px); }
-  .sg-section--content-size-expanded .sg-section__content {
-    max-width: 1240px; } }
+    height: calc(100vh - 60px); } }
 
 /* Additional Reset */
 #sg-optimizer-app .sg-page {
@@ -701,7 +692,8 @@ a {
 
 #sg-optimizer-app .sg-layout {
   display: block;
-  height: auto; }
+  height: auto;
+  overflow: visible; }
 
 #sg-optimizer-app .sg-layout:after {
   content: '';

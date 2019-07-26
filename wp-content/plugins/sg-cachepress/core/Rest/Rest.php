@@ -194,5 +194,21 @@ class Rest {
 				'permission_callback' => array( $this, 'check_permissions' ),
 			)
 		);
+
+		register_rest_route(
+			self::REST_NAMESPACE, '/get-assets/', array(
+				'methods'  => 'GET',
+				'callback' => array( $this->helper, 'get_assets' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
+
+		register_rest_route(
+			self::REST_NAMESPACE, '/update-exclude-list/', array(
+				'methods'  => 'POST',
+				'callback' => array( $this->helper, 'update_exclude_list' ),
+				'permission_callback' => array( $this, 'check_permissions' ),
+			)
+		);
 	}
 }

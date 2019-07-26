@@ -96,6 +96,16 @@ class Minifier {
 			add_action( 'wp_print_styles', array( $this, 'minify_styles' ), 11 );
 			add_action( 'wp_print_footer_scripts', array( $this, 'minify_styles' ), 11 );
 		}
+
+		$this->js_ignore_list = array_merge(
+			$this->js_ignore_list,
+			get_option( 'siteground_optimizer_minify_javascript_exclude', array() )
+		);
+
+		$this->css_ignore_list = array_merge(
+			$this->css_ignore_list,
+			get_option( 'siteground_optimizer_minify_css_exclude', array() )
+		);
 	}
 
 	/**
@@ -242,8 +252,14 @@ class Minifier {
 
 			$original_filepath = Front_End_Optimization::get_original_filepath( $wp_styles->registered[ $handle ]->src );
 
+			$parsed_url = parse_url( $wp_styles->registered[ $handle ]->src );
+
 			// Build the minified version filename.
 			$filename = dirname( $original_filepath ) . '/' . $wp_styles->registered[ $handle ]->handle . '.min.css';
+
+			if ( ! empty( $parsed_url['query'] ) ) {
+				$filename = $filename . '?' . $parsed_url['query'];
+			}
 
 			// Check for original file modifications and create the minified copy.
 			$is_minified_file_ok = $this->check_and_create_file( $filename, $original_filepath );
@@ -307,30 +323,31 @@ class Minifier {
 		$protocol = isset( $_SERVER['HTTPS'] ) ? 'https' : 'http';
 
 		// Build the current url.
-		$url = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER["REQUEST_URI"];
-
-		// Remove the query params from the url.
-		$plain_url = trailingslashit( $protocol . '://' . $_SERVER['HTTP_HOST'] . parse_url( $_SERVER["REQUEST_URI"], PHP_URL_PATH ) );
+		$url = $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
 		// Get excluded urls.
-		$excluded_urls = apply_filters( 'sgo_html_minify_exclude_urls', array() );
+		$excluded_urls = apply_filters( 'sgo_html_minify_exclude_urls', get_option( 'siteground_optimizer_minify_html_exclude', array() ) );
 
-		foreach ( $excluded_urls as $excluded_url ) {
+		// Prepare the url parts for being used as regex.
+		$prepared_parts = array_map(
+			function( $item ) {
+				return str_replace( '\*', '.*', preg_quote( str_replace( home_url(), '', $item ), '/' ) );
+			}, $excluded_urls
+		);
 
-			// Add trailingslash if the excluded url doesn't have query params.
-			if ( ! parse_url( $excluded_url, PHP_URL_QUERY ) ) {
-				$excluded_url = trailingslashit( $excluded_url );
+		// Build the regular expression.
+		$regex = sprintf(
+			'/%s(%s)$/i',
+			preg_quote( home_url(), '/' ), // Add the home url in the beginning of the regex.
+			implode( '|', $prepared_parts ) // Then add each part.
+		);
 
-				// Check if the current url matches the excluded url.
-				if ( $plain_url === $excluded_url ) {
-					return true;
-				}
-			}
+		// Check if the current url matches any of the excluded urls.
+		preg_match( $regex, $url, $matches );
 
-			// Compare the original url with excluded url provided from the client.
-			if ( $url === $excluded_url ) {
-				return true;
-			}
+		// The url is excluded if matched the regular expression.
+		if ( ! empty( $matches ) ) {
+			return true;
 		}
 
 		// If there are no params we don't need to check the query params.
@@ -339,7 +356,7 @@ class Minifier {
 		}
 
 		// Get excluded params.
-		$excluded_params = apply_filters( 'sgo_html_minify_exclude_params', array( 'pdf-catalog' ) );
+		$excluded_params = apply_filters( 'sgo_html_minify_exclude_params', array( 'pdf-catalog', 'tve' ) );
 
 		// Check if any of the excluded params exists in the request.
 		foreach ( $excluded_params as $param ) {

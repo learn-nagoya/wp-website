@@ -6,7 +6,7 @@ Donate link:
 Tags: community, member, membership, user-profile, user-registration
 Requires at least: 4.9
 Tested up to: 5.2
-Stable tag: 2.0.49
+Stable tag: 2.0.54
 License: GNU Version 2 or Any Later Version
 License URI: http://www.gnu.org/licenses/gpl-3.0.txt
 
@@ -41,6 +41,7 @@ Read about all of the plugin's features at [Ultimate Member](https://ultimatemem
 
 Ultimate Member has a range of extensions that allow you to extend the power of the plugin. You can purchase all of these extensions at a significant discount with our [All Access Pass](https://ultimatemember.com/pricing/) or you can purchase extensions individually.
 
+* [User Bookmarks](https://ultimatemember.com/extensions/user-bookmarks/) - Allow users to bookmark content from your website
 * [Private Content](https://ultimatemember.com/extensions/private-content/) - Display private content to logged in users that only they can access
 * [Instagram](https://ultimatemember.com/extensions/instagram/) - Allow users to show their Instagram photos on their profile
 * [User Tags](https://ultimatemember.com/extensions/user-tags/) - Lets you add a user tag system to your website
@@ -53,7 +54,7 @@ Ultimate Member has a range of extensions that allow you to extend the power of 
 * [bbPress](https://ultimatemember.com/extensions/bbpress/) - With the bbPress extension you can beautifully integrate Ultimate Member with bbPress
 * [MailChimp](https://ultimatemember.com/extensions/mailchimp/) - Allow users to subscribe to your MailChimp lists when they signup on your site and sync user meta to MailChimp
 * [User Reviews](https://ultimatemember.com/extensions/user-reviews/) - Allow users to rate & review each other using a 5 star rate/review system
-* [Verified Users](https://ultimatemember.com/extensions/verified-users/) - Add a user verficiation system to your site so user accounts can be verified
+* [Verified Users](https://ultimatemember.com/extensions/verified-users/) - Add a user verification system to your site so user accounts can be verified
 * [myCRED](https://ultimatemember.com/extensions/mycred/) - With the myCRED extension you can integrate Ultimate Member with the popular myCRED points management plugin
 * [Notices](https://ultimatemember.com/extensions/notices/) - Alert users to important information using conditional notices
 * [Profile Completeness](https://ultimatemember.com/extensions/profile-completeness/) - Encourage or force users to complete their profiles with the profile completeness extension
@@ -63,6 +64,7 @@ Ultimate Member has a range of extensions that allow you to extend the power of 
 
 = Free Extensions =
 
+* [ForumWP](https://ultimatemember.com/extensions/forumwp/) - This free extension integrates Ultimate Member with the forum plugin [ForumWP](https://forumwpplugin.com).
 * [Terms & Conditions](https://ultimatemember.com/extensions/terms-conditions/) - Add a terms and condition checkbox to your registration forms & require users to agree to your T&Cs before registering on your site.
 * [Google reCAPTCHA](https://ultimatemember.com/extensions/google-recaptcha/) - Stop bots on your registration & login forms with Google reCAPTCHA
 * [Online Users](https://ultimatemember.com/extensions/online-users/) - Display what users are online with this extension
@@ -70,6 +72,10 @@ Ultimate Member has a range of extensions that allow you to extend the power of 
 = Theme =
 
 Our official [theme](https://ultimatemember.com/theme/) is purpose built for websites that have logged in and out users. The [theme](https://ultimatemember.com/theme/) has deep integration with Ultimate Member plugin and the extensions, different header designs for logged-in/out users and works alongside the Beaver Builder and Elementor page builders.
+
+= ForumWP =
+
+In addition to Ultimate Member we also have another plugin called [ForumWP](https://forumwpplugin.com/). ForumWP is a forum plugin which adds an online forum to your website, allowing users to create topics and write replies. Forums are a great way to build and grow an online community.
 
 = Development * Translations =
 
@@ -132,6 +138,54 @@ The plugin works with popular caching plugins by automatically excluding Ultimat
 == Changelog ==
 
 = Important: UM2.0+ is a significant update to the code base from 1.3.88. Please make sure you take a full-site backup with restore point before updating the plugin =
+
+= 2.0.54: July 22, 2019 =
+
+* Enhancements:
+  - Added security fixes (XSS)
+
+* Bugfixes:
+  - Fixed update process for not UM custom role
+  - Fixed extensions licenses validation handler
+  - Fixed profile tabs handlers
+
+= 2.0.53: July 16, 2019 =
+
+* Enhancements:
+  - Added option to disable profile avatar uploader
+  - Moved extensions icons to core
+
+* Bugfixes:
+  - Fixed Profile Tabs Privacy settings
+  - Fixed Notifications Account tab view
+  - Fixed warnings on validation process
+  - Fixed slashes in some texts from options
+  - Fixed callback functions for select and multiselect fields
+
+= 2.0.52: July 11, 2019 =
+
+* Enhancements:
+  - Extended hooks for 3rd party integrations
+
+* Bugfixes:
+  - Fixed settings labels with CPT & Taxonomies
+  - Fixed UM Roles create/edit XSS security issue
+  - Fixed XSS security issue on account upgrade
+
+= 2.0.51: July 09, 2019 =
+
+* Bugfixes:
+  - Fixed UM Roles create/edit security issue
+
+= 2.0.50: July 02, 2019 =
+
+* Enhancements:
+  - Extended hooks for 3rd party integrations
+
+* Bugfixes:
+  - Fixed PHP notices when runs validation
+  - Fixed loop issue with Profile tabs
+  - Fixed home page restrictions
 
 = 2.0.49: May 29, 2019 =
 

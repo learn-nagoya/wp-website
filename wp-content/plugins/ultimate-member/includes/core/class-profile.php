@@ -78,6 +78,24 @@ if ( ! class_exists( 'um\core\Profile' ) ) {
 
 
 		/**
+		 * Pre-defined privacy options
+		 *
+		 * @return array
+		 */
+		function tabs_privacy() {
+			$privacy = array(
+				0 => __( 'Anyone', 'ultimate-member' ),
+				1 => __( 'Guests only', 'ultimate-member' ),
+				2 => __( 'Members only', 'ultimate-member' ),
+				3 => __( 'Only the owner', 'ultimate-member' ),
+				4 => __( 'Specific roles', 'ultimate-member' ),
+			);
+
+			return $privacy;
+		}
+
+
+		/**
 		 * All tab data
 		 *
 		 * @return array
@@ -123,12 +141,12 @@ if ( ! class_exists( 'um\core\Profile' ) ) {
 			// disable private tabs
 			if ( ! is_admin() ) {
 				if ( is_user_logged_in() ) {
-					$user_id = um_user('ID');
+					$user_id = um_user( 'ID' );
 					um_fetch_user( get_current_user_id() );
 				}
 
 				foreach ( $tabs as $id => $tab ) {
-					if ( ! $this->can_view_tab( $id ) ) {
+					if ( ! $this->can_view_tab( $id, $tab ) ) {
 						unset( $tabs[ $id ] );
 					}
 				}
@@ -143,93 +161,28 @@ if ( ! class_exists( 'um\core\Profile' ) ) {
 
 
 		/**
-		 * Tabs that are active
-		 *
-		 * @return array
-		 */
-		function tabs_active() {
-			$tabs = $this->tabs();
-
-			foreach ( $tabs as $id => $info ) {
-				if ( ! UM()->options()->get( 'profile_tab_' . $id ) && ! isset( $info['_builtin'] ) && ! isset( $info['custom'] ) ) {
-					unset( $tabs[ $id ] );
-				}
-			}
-
-			return $tabs;
-		}
-
-
-		/**
-		 * Primary tabs only
-		 *
-		 * @return array
-		 */
-		function tabs_primary() {
-			$tabs = $this->tabs();
-			$primary = array();
-			foreach ( $tabs as $id => $info ) {
-				if ( isset( $info['name'] ) ) {
-					$primary[$id] = $info['name'];
-				}
-			}
-			return $primary;
-		}
-
-
-		/**
-		 * Activated tabs in backend
-		 *
-		 * @return string
-		 */
-		function tabs_enabled() {
-			$tabs = $this->tabs();
-			foreach ( $tabs as $id => $info ) {
-				if ( isset( $info['name'] ) ) {
-					if ( UM()->options()->get( 'profile_tab_' . $id ) || isset( $info['_builtin'] ) ) {
-						$primary[ $id ] = $info['name'];
-					}
-				}
-			}
-			return isset( $primary ) ? $primary : '';
-		}
-
-
-		/**
-		 * Privacy options
-		 *
-		 * @return array
-		 */
-		function tabs_privacy() {
-			$privacy = array(
-				0 => 'Anyone',
-				1 => 'Guests only',
-				2 => 'Members only',
-				3 => 'Only the owner',
-				4 => 'Specific roles'
-			);
-
-			return $privacy;
-		}
-
-
-		/**
 		 * Check if the user can view the current tab
 		 *
-		 * @param $tab
+		 * @param string $tab
+		 * @param array $tab_data
 		 *
 		 * @return bool
 		 */
-		function can_view_tab( $tab ) {
+		function can_view_tab( $tab, $tab_data = array() ) {
+			$can_view = false;
 
 			$target_id = (int) UM()->user()->target_id;
 			if ( empty( $target_id ) ) {
 				return true;
 			}
 
-			$can_view = false;
+			if ( isset( $tab_data['default_privacy'] ) ) {
+				$privacy = $tab_data['default_privacy'];
+			} else {
+				$privacy = intval( UM()->options()->get( 'profile_tab_' . $tab . '_privacy' ) );
+			}
 
-			$privacy = intval( UM()->options()->get( 'profile_tab_' . $tab . '_privacy' ) );
+			$privacy = apply_filters( 'um_profile_menu_tab_privacy', $privacy, $tab );
 			switch ( $privacy ) {
 				case 0:
 					$can_view = true;
@@ -249,7 +202,11 @@ if ( ! class_exists( 'um\core\Profile' ) ) {
 
 				case 4:
 					if ( is_user_logged_in() ) {
-						$roles = (array) UM()->options()->get( 'profile_tab_' . $tab . '_roles' );
+						if ( isset( $tab_data['default_privacy'] ) ) {
+							$roles = isset( $tab_data['default_privacy_roles'] ) ? $tab_data['default_privacy_roles'] : array();
+						} else {
+							$roles = (array) UM()->options()->get( 'profile_tab_' . $tab . '_roles' );
+						}
 
 						$current_user_roles = um_user( 'roles' );
 						if ( ! empty( $current_user_roles ) && count( array_intersect( $current_user_roles, $roles ) ) > 0 ) {
@@ -268,16 +225,98 @@ if ( ! class_exists( 'um\core\Profile' ) ) {
 
 
 		/**
+		 * Tabs that are active
+		 *
+		 * @return array
+		 */
+		function tabs_active() {
+			$tabs = $this->tabs();
+
+			foreach ( $tabs as $id => $info ) {
+				if ( ! empty( $info['hidden'] ) ) {
+					continue;
+				}
+
+				if ( ! UM()->options()->get( 'profile_tab_' . $id ) ) {
+					unset( $tabs[ $id ] );
+				}
+			}
+
+			if ( ! is_admin() || ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+				/**
+				 * UM hook
+				 *
+				 * @type filter
+				 * @title um_user_profile_tabs
+				 * @description Extend profile tabs
+				 * @input_vars
+				 * [{"var":"$tabs","type":"array","desc":"Profile Tabs"}]
+				 * @change_log
+				 * ["Since: 2.0"]
+				 * @usage
+				 * <?php add_filter( 'um_user_profile_tabs', 'function_name', 10, 1 ); ?>
+				 * @example
+				 * <?php
+				 * add_filter( 'um_user_profile_tabs', 'my_user_profile_tabs', 10, 1 );
+				 * function my_user_profile_tabs( $tabs ) {
+				 *     // your code here
+				 *     return $tabs;
+				 * }
+				 * ?>
+				 */
+				$tabs = apply_filters( 'um_user_profile_tabs', $tabs );
+			}
+
+			return $tabs;
+		}
+
+
+		/**
 		 * Get active_tab
 		 *
 		 * @return string
 		 */
 		function active_tab() {
 
-			$this->active_tab = UM()->options()->get('profile_menu_default_tab');
+			// get active tabs
+			$tabs = UM()->profile()->tabs_active();
 
-			if ( get_query_var('profiletab') ) {
-				$this->active_tab = get_query_var('profiletab');
+			if ( ! UM()->options()->get( 'profile_menu' ) ) {
+
+				$query_arg = get_query_var( 'profiletab' );
+				if ( ! empty( $query_arg ) && ! empty( $tabs[ $query_arg ]['hidden'] ) ) {
+					$this->active_tab = $query_arg;
+				} else {
+					if ( ! empty( $tabs ) ) {
+						foreach ( $tabs as $k => $tab ) {
+							if ( ! empty( $tab['hidden'] ) ) {
+								$this->active_tab = $k;
+								break;
+							}
+						}
+					}
+				}
+
+			} else {
+				$query_arg = get_query_var( 'profiletab' );
+				if ( ! empty( $query_arg ) && ! empty( $tabs[ $query_arg ] ) ) {
+					$this->active_tab = $query_arg;
+				} else {
+					$default_tab = UM()->options()->get( 'profile_menu_default_tab' );
+
+					if ( ! empty( $tabs[ $default_tab ] ) ) {
+						$this->active_tab = $default_tab;
+					} else {
+						if ( ! empty( $tabs ) ) {
+							foreach ( $tabs as $k => $tab ) {
+								if ( ! empty( $tab['hidden'] ) ) {
+									$this->active_tab = $k;
+									break;
+								}
+							}
+						}
+					}
+				}
 			}
 
 			/**

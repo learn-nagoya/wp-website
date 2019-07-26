@@ -123,7 +123,7 @@ class Lazy_Load_Images {
 
 			if ( ! empty( $class_matches[1] ) ) {
 				// Load the ignored image classes.
-				$ignored_classes = apply_filters( 'sgo_lazy_load_exclude_classes', array() );
+				$ignored_classes = apply_filters( 'sgo_lazy_load_exclude_classes', get_option( 'siteground_optimizer_excluded_lazy_load_classes', array() ) );
 
 				// Convert all classes to array.
 				$image_classes = explode( ' ', $class_matches[1] );

@@ -43,6 +43,7 @@ class Combinator {
 	private $combined_styles_exclude_list = array(
 		'siteground-optimizer-combined-styles-header',
 		'siteground-optimizer-combined-styles-footer',
+		'elementor-frontend', // Excluded in 5.1.3.
 	);
 
 	/**
@@ -62,14 +63,19 @@ class Combinator {
 		}
 
 		$this->assets_dir = Front_End_Optimization::get_instance()->assets_dir;
+		$this->combined_styles_exclude_list = array_merge(
+			$this->combined_styles_exclude_list,
+			get_option( 'siteground_optimizer_combine_css_exclude', array() )
+		);
 
 		// Minify the css files.
 		add_action( 'wp_print_styles', array( $this, 'pre_combine_header_styles' ), 10 );
+		add_action( 'print_embed_styles', array( $this, 'pre_combine_header_styles' ), 10 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_header_combined_styles' ) );
+		add_action( 'enqueue_embed_scripts', array( $this, 'enqueue_header_combined_styles' ) );
 		// We may combine footer styles in upcoming versions.
 		// add_action( 'wp_print_footer_scripts', array( $this, 'combine_styles' ), 10 );
 		// add_action( 'get_footer', array( $this, 'enqueue_footer_combined_styles' ) );
-
 	}
 
 	/**
@@ -146,7 +152,8 @@ class Combinator {
 				in_array( $handle, $excluded_styles ) || // If the style is excluded from combination.
 				false === $wp_styles->registered[ $handle ]->src || // If the source is empty.
 				@strpos( Helper::get_home_url(), parse_url( $wp_styles->registered[ $handle ]->src, PHP_URL_HOST ) ) === false || // Skip all external sources.
-				pathinfo( $wp_styles->registered[ $handle ]->src, PATHINFO_EXTENSION ) === 'php' // If it's dynamically generated css.
+				pathinfo( $wp_styles->registered[ $handle ]->src, PATHINFO_EXTENSION ) === 'php' || // If it's dynamically generated css.
+				is_int( strpos( $handle, 'elementor-post-' ) ) // Exclude all elementor styles.
 			) {
 				continue;
 			}
@@ -220,22 +227,18 @@ class Combinator {
 
 			$replacements = array();
 
-
 			preg_match_all( $regex, $content, $matches );
 
 			if ( ! empty( $matches ) ) {
 				foreach ( $matches[1] as $index => $match ) {
+					$match = trim( $match, " \t\n\r\0\x0B\"'" );
 
 					// Bail if the url is valid.
-					if ( filter_var( trim( $match, " \t\n\r\0\x0B\"'" ), FILTER_VALIDATE_URL ) ) {
-						continue;
+					if ( false == preg_match( '~(http(?:s)?:)?\/\/(?:[\w-]+\.)*([\w-]{1,63})(?:\.(?:\w{3}|\w{2}))(?:$|\/)~', $match ) ) {
+						$replacement = str_replace( $match, $dir . $match, $matches[0][ $index ] );
+
+						$replacements[ $matches[0][ $index ] ] = $replacement;
 					}
-
-					$full_url = $dir . trim( $match, " \t\n\r\0\x0B\"'" );
-
-					$replacement = str_replace( $match, $full_url, $matches[0][ $index ] );
-
-					$replacements[ $matches[0][ $index ] ] = $replacement;
 				}
 			}
 
@@ -282,6 +285,5 @@ class Combinator {
 		);
 
 		return $data;
-
 	}
 }

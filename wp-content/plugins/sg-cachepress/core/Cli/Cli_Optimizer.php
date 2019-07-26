@@ -174,10 +174,10 @@ class Cli_Optimizer {
 		}
 
 		if ( in_array( false, $status ) ) {
-			return \WP_CLI::error( 'Could not Enable Lazy Loading Images' );
+			return \WP_CLI::error( 'Could not ' . ucwords( $action ) . ' Lazy Loading Images' );
 		}
 
-		return \WP_CLI::success( 'Lazy Loading Images Enabled' );
+		return \WP_CLI::success( 'Lazy Loading Images ' . ucwords( $action ) );
 
 	}
 

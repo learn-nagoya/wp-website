@@ -55,6 +55,10 @@ if ( ! class_exists( 'um\core\Validation' ) ) {
 			}
 
 			foreach ( $changes as $key => $value ) {
+				if ( ! isset( $fields[ $key ] ) ) {
+					continue;
+				}
+
 				//rating field validation
 				if ( isset( $fields[ $key ]['type'] ) && $fields[ $key ]['type'] == 'rating' ) {
 					if ( ! is_numeric( $value ) ) {
@@ -73,7 +77,11 @@ if ( ! class_exists( 'um\core\Validation' ) ) {
 				}
 
 				//validation of correct values from options in wp-admin
-				$stripslashes = stripslashes( $value );
+				$stripslashes = $value;
+				if ( is_string( $value ) ) {
+					$stripslashes = stripslashes( $value );
+				}
+
 				if ( in_array( $fields[ $key ]['type'], array( 'select' ) ) &&
 				     ! empty( $stripslashes ) && ! empty( $fields[ $key ]['options'] ) &&
 				     ! in_array( $stripslashes, array_map( 'trim', $fields[ $key ]['options'] ) ) ) {

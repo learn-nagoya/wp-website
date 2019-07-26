@@ -4,7 +4,6 @@ Tags: nginx, caching, speed, memcache, memcached, performance, siteground, nginx
 Requires at least: 4.7
 Requires PHP: 5.5
 Tested up to: 5.2
-Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -169,6 +168,23 @@ Our plugin uses a cookie in order to function properly. It does not store person
 1. Go to Plugins -> Installed Plugins and click the 'Activate' link under the WordPress SG CachePress listing
 
 == Changelog ==
+
+= Version 5.2.1 =
+* Improved Cloudflare compatibility
+
+= Version 5.2.0 =
+* Exclude list Interface for JavaScript handlers
+* Exclude list Interface for CSS handlers
+* Exclude list Interface for HTML minification (URL like dynamic)
+* Exclude list interface for LazyLoading (Class)
+* Improved Thrive Architect support
+* Fixed notice when purging comment cache
+
+= Version 5.1.3 =
+* Improved Elementor support
+* Improved CSS optimization for inclusions without protocol
+* Excluded large PNGs from optimizations
+* Added better WP-CLI command documentation
 
 = Version 5.1.2 =
 * Added support for Recommended by SiteGround PHP Version

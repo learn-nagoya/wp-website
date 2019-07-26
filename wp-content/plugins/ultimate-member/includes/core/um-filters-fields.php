@@ -310,7 +310,9 @@ add_filter( 'um_profile_field_filter_hook__image', 'um_profile_field_filter_hook
  * @return string
  */
 function um_profile_field_filter_hook__( $value, $data, $type = '' ) {
-	if ( !$value ) return '';
+	if ( ! $value ) {
+		return '';
+	}
 
 	if ( ( isset( $data['validate'] ) && $data['validate'] != '' && strstr( $data['validate'], 'url' ) ) || ( isset( $data['type'] ) && $data['type'] == 'url' ) ) {
 		$alt = ( isset( $data['url_text'] ) && !empty( $data['url_text'] ) ) ? $data['url_text'] : $value;
@@ -333,7 +335,7 @@ function um_profile_field_filter_hook__( $value, $data, $type = '' ) {
 			if ( $data['validate'] == 'vk_url' ) 			$value = 'https://vk.com/' . $value;
 		}
 
-		
+
 		if ( isset( $data['validate'] ) && $data['validate'] == 'skype' ) {
 
 			$value = $value;
@@ -351,20 +353,21 @@ function um_profile_field_filter_hook__( $value, $data, $type = '' ) {
 	}
 
 	if ( isset( $data['validate'] ) && $data['validate'] == 'skype' ) {
-		
+
 		$value = str_replace('https://','',$value );
 		$value = str_replace('http://','',$value );
-		
+
 		$data['url_target'] = ( isset( $data['url_target'] ) ) ? $data['url_target'] : '_blank';
 		$value = '<a href="'. 'skype:'.$value.'?chat'.'" title="'.$value.'" target="'.$data['url_target'].'" ' . $url_rel . '>'.$value.'</a>';
 
-	} 
-	
-	if ( !is_array( $value ) ) {
-		if ( is_email( $value ) )
+	}
+
+	if ( ! is_array( $value ) ) {
+		if ( is_email( $value ) ) {
 			$value = '<a href="mailto:'. $value.'" title="'.$value.'">'.$value.'</a>';
+		}
 	} else {
-		$value = implode(', ', $value);
+		$value = implode( ', ', $value );
 	}
 
 	$value = str_replace('https://https://','https://',$value);
@@ -521,15 +524,16 @@ add_filter('um_profile_field_filter_hook__','um_force_utf8_fields', 9, 3 );
  * @uses   hook filter: um_is_selected_filter_value
  */
 function um_is_selected_filter_value( $value ) {
-	if ( ! UM()->options()->get('um_force_utf8_strings') )
+	if ( ! UM()->options()->get( 'um_force_utf8_strings' ) ) {
 		return $value;
+	}
 
 	$value = um_force_utf8_string( $value );
 
 	return $value;
 }
-add_filter( 'um_is_selected_filter_value','um_is_selected_filter_value', 1, 9 );
-add_filter( 'um_select_dropdown_dynamic_option_value','um_is_selected_filter_value', 1, 10 );
+add_filter( 'um_is_selected_filter_value','um_is_selected_filter_value', 9, 1 );
+add_filter( 'um_select_dropdown_dynamic_option_value','um_is_selected_filter_value', 10, 1 );
 
 /**
  * Filter select dropdown to use UTF-8 encoding
@@ -539,9 +543,10 @@ add_filter( 'um_select_dropdown_dynamic_option_value','um_is_selected_filter_val
  * @return array
  * @uses   hook filter: um_select_dropdown_dynamic_options
  */
-function um_select_dropdown_dynamic_options_to_utf8( $options, $data ){
-	if ( ! UM()->options()->get( 'um_force_utf8_strings' ) )
+function um_select_dropdown_dynamic_options_to_utf8( $options, $data ) {
+	if ( ! UM()->options()->get( 'um_force_utf8_strings' ) ) {
 		return $options;
+	}
 
 	foreach ( $options as $key => $value ) {
 		$options[ $key ] = um_force_utf8_string( $value );
@@ -549,7 +554,7 @@ function um_select_dropdown_dynamic_options_to_utf8( $options, $data ){
 
 	return $options;
 }
-add_filter( 'um_select_dropdown_dynamic_options','um_select_dropdown_dynamic_options_to_utf8', 2, 10 );
+add_filter( 'um_select_dropdown_dynamic_options','um_select_dropdown_dynamic_options_to_utf8', 10, 2 );
 
 
 /**
@@ -580,12 +585,8 @@ add_filter( 'um_field_non_utf8_value', 'um_field_non_utf8_value' );
  * @uses   hook filter: um_select_dropdown_dynamic_options, um_multiselect_options
  */
 function um_select_dropdown_dynamic_callback_options( $options, $data ) {
-
-	if( isset( $data['custom_dropdown_options_source'] ) && ! empty( $data['custom_dropdown_options_source'] ) ){
-
-		if( function_exists( $data['custom_dropdown_options_source'] ) ){
-			$options = call_user_func( $data['custom_dropdown_options_source'] );
-		}
+	if ( ! empty( $data['custom_dropdown_options_source'] ) && function_exists( $data['custom_dropdown_options_source'] ) ) {
+		$options = call_user_func( $data['custom_dropdown_options_source'] );
 	}
 
 	return $options;
@@ -604,7 +605,7 @@ add_filter( 'um_multiselect_options','um_select_dropdown_dynamic_callback_option
  */
 
 function um_option_match_callback_view_field( $value, $data ) {
-	if( ! empty( $data['custom_dropdown_options_source'] ) ){
+	if ( ! empty( $data['custom_dropdown_options_source'] ) ) {
 		return UM()->fields()->get_option_value_from_callback( $value, $data, $data['type'] );
 	}
 
@@ -681,13 +682,13 @@ function um_profile_field_filter_xss_validation( $value, $data, $type = '' ) {
 				}
 			}
 		} elseif ( 'select' == $type || 'radio' == $type ) {
-			if ( ! empty( $data['options'] ) && ! in_array( $value, $data['options'] ) ) {
+			if ( ! empty( $data['options'] ) && ! in_array( $value, $data['options'] ) && empty( $data['custom_dropdown_options_source'] ) ) {
 				$value = '';
 			}
 		}
-	} elseif ( ! empty( $value ) ) {
+	} elseif ( ! empty( $value ) && is_array( $value ) ) {
 		if ( 'multiselect' == $type || 'checkbox' == $type ) {
-			if ( ! empty( $data['options'] ) && is_array( $value ) ) {
+			if ( ! empty( $data['options'] ) && empty( $data['custom_dropdown_options_source'] ) ) {
 				$value = array_intersect( $value, $data['options'] );
 			}
 		}

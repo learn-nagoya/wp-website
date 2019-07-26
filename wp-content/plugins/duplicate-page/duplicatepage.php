@@ -4,7 +4,7 @@ Plugin Name: Duplicate Page
 Plugin URI: https://wordpress.org/plugins/duplicate-page/
 Description: Duplicate Posts, Pages and Custom Posts using single click.
 Author: mndpsingh287
-Version: 3.5
+Version: 3.8
 Author URI: https://profiles.wordpress.org/mndpsingh287/
 License: GPLv2
 Text Domain: duplicate-page
@@ -168,17 +168,17 @@ if (!class_exists('duplicate_page')):
                 /*
                 * duplicate all post meta
                 */
-                $post_meta_infos = $wpdb->get_results("SELECT meta_key, meta_value FROM $wpdb->postmeta WHERE post_id=$post_id");
-                if (count($post_meta_infos) != 0) {
-                    $sql_query = "INSERT INTO $wpdb->postmeta (post_id, meta_key, meta_value) ";
-                    foreach ($post_meta_infos as $meta_info) {
-                        $meta_key = $meta_info->meta_key;
+                    $post_meta_infos = $wpdb->get_results("SELECT meta_key, meta_value FROM $wpdb->postmeta WHERE post_id=$post_id");
+				 if (count($post_meta_infos)!=0) {
+				     $sql_query = "INSERT INTO $wpdb->postmeta (post_id, meta_key, meta_value) ";
+				     foreach ($post_meta_infos as $meta_info) {
+                        $meta_key = sanitize_text_field($meta_info->meta_key);
                         $meta_value = addslashes($meta_info->meta_value);
-                        $sql_query_sel[] = "SELECT $new_post_id, '$meta_key', '$meta_value'";
-                    }
-                    $sql_query .= implode(' UNION ALL ', $sql_query_sel);
-                    $wpdb->query($sql_query);
-                }
+                        $sql_query_sel[]= "SELECT $new_post_id, '$meta_key', '$meta_value'";
+                        }
+                        $sql_query.= implode(" UNION ALL ", $sql_query_sel);
+                        $wpdb->query($sql_query);
+					} 
                 /*
                 * finally, redirecting to your choice
                 */

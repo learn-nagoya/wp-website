@@ -9,6 +9,7 @@ use SiteGround_Optimizer\Ssl\Ssl;
 use SiteGround_Optimizer\Htaccess\Htaccess;
 use SiteGround_Optimizer\Multisite\Multisite;
 use SiteGround_Optimizer\Images_Optimizer\Images_Optimizer;
+use SiteGround_Optimizer\Front_End_Optimization\Front_End_Optimization;
 use SiteGround_Optimizer\Helper\Helper;
 
 /**
@@ -68,10 +69,12 @@ class Rest_Helper {
 	public function optimize_images() {
 		$this->images_optimizer->initialize();
 
-		wp_send_json_success( array(
-			'image_optimization_status'  => 0,
-			'image_optimization_stopped' => 0,
-		) );
+		wp_send_json_success(
+			array(
+				'image_optimization_status'  => 0,
+				'image_optimization_stopped' => 0,
+			)
+		);
 	}
 
 	/**
@@ -139,7 +142,7 @@ class Rest_Helper {
 		$data = json_decode( $request->get_body(), true );
 
 		// Bail if the option key is not set.
-		if ( empty( $data[ $key ] ) ) {
+		if ( ! isset( $data[ $key ] ) ) {
 			return true === $bail ? wp_send_json_error() : false;
 		}
 
@@ -160,6 +163,7 @@ class Rest_Helper {
 		}
 
 		$options['has_images_for_optimization'] = $this->options->check_for_unoptimized_images();
+		$options['assets']                      = Front_End_Optimization::get_instance()->get_assets();
 
 		// Send the options to react app.
 		wp_send_json_success( $options );
@@ -204,10 +208,11 @@ class Rest_Helper {
 		if ( empty( $port ) ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'SG Optiimzer was unable to connect to the Memcached server and it was disabled. Please, check your cPanel and turn it on if disabled.', 'sg-cachepress' ),
+					'message' => __( 'SG Optimizer was unable to connect to the Memcached server and it was disabled. Please, check your cPanel and turn it on if disabled.', 'sg-cachepress' ),
 				)
 			);
 		}
+
 		// First enable the option.
 		$result = Options::enable_option( 'siteground_optimizer_enable_memcached' );
 
@@ -218,6 +223,14 @@ class Rest_Helper {
 					'message' => __( 'Memcached Enabled', 'sg-cachepress' ),
 				)
 			);
+		} else {
+			if ( 11211 === $port ) {
+				wp_send_json_error(
+					array(
+						'message' => __( 'SG Optimizer was unable to connect to the Memcached server and it was disabled. Please, check your cPanel and turn it on if disabled.', 'sg-cachepress' ),
+					)
+				);
+			}
 		}
 
 		// Dropin cannot be created.
@@ -504,6 +517,64 @@ class Rest_Helper {
 		update_site_option( 'siteground_optimizer_hide_rating', 1 );
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * Update exclude list.
+	 *
+	 * @since  5.2.0
+	 *
+	 * @param  object $request Request data.
+	 */
+	public function update_exclude_list( $request ) {
+		// List of predefined exclude lists.
+		$exclude_lists = array(
+			'minify_javascript_exclude',
+			'async_javascript_exclude',
+			'minify_css_exclude',
+			'minify_html_exclude',
+			'minify_html_exclude',
+			'excluded_lazy_load_classes',
+			'combine_css_exclude',
+		);
+
+		// Get the type and handles data from the request.
+		$type   = $this->validate_and_get_option_value( $request, 'type' );
+		$handle = $this->validate_and_get_option_value( $request, 'handle' );
+
+		// Bail if the type is not listed in the predefined exclude list.
+		if ( ! in_array( $type, $exclude_lists ) ) {
+			wp_send_json_error();
+		}
+
+		$handles = get_option( 'siteground_optimizer_' . $type, array() );
+		$key     = array_search( $handle, $handles );
+
+		if ( false === $key ) {
+			array_push( $handles, $handle );
+		} else {
+			unset( $handles[ $key ] );
+		}
+
+		$handles = array_values( $handles );
+
+		if ( in_array( $type, array( 'minify_html_exclude', 'excluded_lazy_load_classes' ) ) ) {
+			$handles = $handle;
+		}
+
+		// Update the option.
+		$result = update_option( 'siteground_optimizer_' . $type, $handles );
+
+		// Purge the cache.
+		Supercacher::purge_cache();
+
+		// Send response to the react app.
+		wp_send_json(
+			array(
+				'success' => $result,
+				'handles' => $handles,
+			)
+		);
 	}
 
 }

@@ -879,6 +879,7 @@ if ( ! class_exists( 'um\core\Fields' ) ) {
 						}
 					}
 
+
 					/**
 					 * UM hook
 					 *
@@ -887,7 +888,8 @@ if ( ! class_exists( 'um\core\Fields' ) ) {
 					 * @description Change is selected filter value
 					 * @input_vars
 					 * [{"var":"$value","type":"string","desc":"Selected filter value"},
-					 * {"var":"$key","type":"string","desc":"Selected filter key"}]
+					 * {"var":"$key","type":"string","desc":"Selected filter key"},
+					 * {"var":"$value","type":"string","desc":"Selected filter value"}]
 					 * @change_log
 					 * ["Since: 2.0"]
 					 * @usage add_filter( 'um_is_selected_filter_value', 'function_name', 10, 2 );
@@ -900,7 +902,7 @@ if ( ! class_exists( 'um\core\Fields' ) ) {
 					 * }
 					 * ?>
 					 */
-					$field_value = apply_filters( 'um_is_selected_filter_value', $field_value, $key );
+					$field_value = apply_filters( 'um_is_selected_filter_value', $field_value, $key, $value );
 
 					/**
 					 * UM hook
@@ -1064,20 +1066,29 @@ if ( ! class_exists( 'um\core\Fields' ) ) {
 		 * @param  array  $data
 		 * @param  string $type
 		 *
-		 * @return json
+		 * @return string
 		 */
 		function get_option_value_from_callback( $value, $data, $type ) {
 
+
 			if ( in_array( $type, array( 'select', 'multiselect' ) ) && ! empty( $data['custom_dropdown_options_source'] ) ) {
 
-				if ( function_exists( $data['custom_dropdown_options_source'] ) ) {
+				$has_custom_source = apply_filters( "um_has_dropdown_options_source__{$data['metakey']}", false );
+
+				if ( $has_custom_source ) {
+
+					$opts = apply_filters( "um_get_field__{$data['metakey']}", array() );
+					$arr_options = $opts['options'];
+
+				} elseif ( function_exists( $data['custom_dropdown_options_source'] ) ) {
 
 					$arr_options = call_user_func(
 						$data['custom_dropdown_options_source'],
 						( ! empty( $data['parent_dropdown_relationship'] ) ? $data['parent_dropdown_relationship'] : '' )
 					);
+				}
 
-
+				if ( $has_custom_source || function_exists( $data['custom_dropdown_options_source'] ) ) {
 					if ( $type == 'select' ) {
 						if ( ! empty( $arr_options[ $value ] ) ) {
 							return $arr_options[ $value ];
@@ -1086,9 +1097,7 @@ if ( ! class_exists( 'um\core\Fields' ) ) {
 						} else {
 							return '';
 						}
-					}
-
-					if ( $type == 'multiselect' ) {
+					} elseif ( $type == 'multiselect' ) {
 
 						if ( is_array( $value ) ) {
 							$values = $value;
@@ -1106,7 +1115,6 @@ if ( ! class_exists( 'um\core\Fields' ) ) {
 
 						return implode( ', ', $arr_paired_options );
 					}
-
 				}
 
 

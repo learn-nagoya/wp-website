@@ -40,3 +40,36 @@ function my_post_queries( $query ) {
   }
 }
 add_action( 'pre_get_posts', 'my_post_queries' );
+
+/**********
+https://www.collectiveray.com/wordpress/wordpress-tips-and-tricks/show-only-posts-and-media-owned-by-logged-in-wordpress-user.html
+
+only show users own post
+**********/
+
+
+add_action('pre_get_posts', 'query_set_only_author' );
+
+function query_set_only_author( $wp_query ) {
+
+ global $current_user;
+
+ //  is_admin() - check if we are on admin dashboard
+ if( is_admin() && !current_user_can('edit_others_posts') ) {
+    $wp_query->set( 'author', $current_user->ID );
+	 
+    add_filter('views_edit-post', 'hide_counts');
+    add_filter('views_edit-community_question', 'hide_counts');
+	add_filter('views_edit-country', 'hide_counts');
+    add_filter('views_edit-guide', 'hide_counts');
+	add_filter('views_edit-news', 'hide_counts');
+    add_filter('views_edit-use_case', 'hide_counts');
+ }
+}
+
+
+function hide_counts($views) {
+ $views = [];
+ return $views;
+}
+
